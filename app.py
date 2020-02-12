@@ -5,7 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager
 
 app = Flask(__name__)
@@ -46,19 +46,19 @@ def index():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        login_user(user)
-
-        flash("Logged in successfully")
-
-        next = request.args.get('next')
-
-        if not is_safe_url(next):
-            return abort(400)
-
-        return redirect(next or url_for('index'))
-    return render_template('login.html', form=form)
+    # form = LoginForm()
+    # if form.validate_on_submit():
+    #     login_user(user)
+    #
+    #     flash("Logged in successfully")
+    #
+    #     next = request.args.get('next')
+    #
+    #     if not is_safe_url(next):
+    #         return abort(400)
+    #
+    #     return redirect(next or url_for('index'))
+    return render_template('login.html')
 
 
 if __name__ == '__main__':
