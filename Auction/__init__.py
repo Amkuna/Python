@@ -23,7 +23,7 @@ def create_app():
         from .main import main as main_blueprint
         app.register_blueprint(main_blueprint)
 
-    db.create_all()
+        db.create_all()
 
     @login_manager.user_loader
     def load_user(user_id):
