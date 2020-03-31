@@ -1,10 +1,12 @@
 import datetime
-from flask import redirect, url_for, render_tmeplate, session, request
+from flask import redirect, url_for, render_tmeplate, session, request, Blueprint
 from flask.views import MethodView
 from form.auction_form import AuctionForm
-from .. import db
+from Auction import db
 from models.user import User
 from models.auction import Auction
+
+auctions = Blueprint('auctions', __name__)
 
 class CreateAuction(MethodView):
     def get(self):

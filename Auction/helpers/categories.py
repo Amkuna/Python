@@ -1,5 +1,5 @@
 choices = [
-    'nezinau',
-    'pavargau',
-    'nesugalvoju'
+    'Baldai',
+    'Kompiuteriai',
+    'Aksesuarai'
 ]
