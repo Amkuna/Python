@@ -22,13 +22,11 @@
             <div class="col-lg-6 offset-lg-3">
                 <div class="login-form">
                     <h2>Sign Up</h2>
-                    {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <div class="notification is-danger">
-                            {{ messages[0] }}
+                    {% for field, errors in form.errors.items() %}
+                        <div class="alert alert-error">
+                            {{ form[field].label }}: {{ ', '.join(errors) }}
                         </div>
-                    {% endif %}
-                    {% endwith %}
+                    {% endfor %}
                     <form method='POST'>
                         {{ form.hidden_tag() }}
                         <div class="group-input">

@@ -12,7 +12,6 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        print("BANDZIAU PRISIJUNGTI")
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.check_password(form.password.data):
             login_user(user)
@@ -26,7 +25,6 @@ def login():
         else:
             flash("Please check your credentials")
 
-    print("NEPRISIJUNGIAU")
     return render_template('login.html', form=form)
 
 
@@ -35,18 +33,19 @@ def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
-        form.check_email(form.email.data)
-        form.check_username(form.username.data)
-        user = User(
-            email=form.email.data,
-            username=form.username.data,
-            password=form.password.data
-            )
-        db.session.add(user)
-        db.session.commit()
+        if not form.email_in_use(field=form.email.data):
+            user = User(
+                email=form.email.data,
+                username=form.username.data,
+                password=form.password.data
+                )
+            db.session.add(user)
+            db.session.commit()
+            
+            return redirect(url_for('users.login'))
         
-        return redirect(url_for('users.login'))
-    
+        form.errors['email'] = ['This email is already in use!']
+
     return render_template('register.html', form=form)
 
 @users.route('/logout')
