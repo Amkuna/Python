@@ -3,17 +3,35 @@ from flask import redirect, url_for, render_template, session, request, Blueprin
 from flask.views import MethodView
 from Auction.auctions.forms import AddAuctionForm, EditAuctionForm
 from Auction import db
-# from models.user import User
 from Auction.models import Auction, User
 from flask_login import current_user, login_required
 from .picture_handler import add_auction_image
 from faker import Faker
 from faker.providers import lorem, python, date_time, bank
+from dateutil.relativedelta import relativedelta
+import datetime
+
 auctions = Blueprint('auctions', __name__)
 
 @auctions.route('/auctions/<int:id>')
 def auction(id):
+    #check if time limit is expired
+    #if it is, do stmh else
+    # if it's not, do the usual
+
+
+
     auction = Auction.query.get_or_404(id)
+    end_day = auction.end_day
+    end_time = auction.end_time
+    
+    today = datetime.datetime.now()
+    rd = relativedelta(end_day, today)
+    print(rd)
+    author = User.query.filter_by(id=auction.user_id).first()
+    auction.views += 1
+    db.session.commit()
+
     maxOffer = auction.min_price
     if not auction.offers:
         maxOffer = "None"
@@ -21,17 +39,22 @@ def auction(id):
         if offer.price >= maxOffer:
             maxOffer = offer.price
 
-    author = User.query.filter_by(id=auction.user_id).first()
-    auction.views += 1
-    db.session.commit()
-
     return render_template('auction.html', auction=auction, author=author, maxOffer=maxOffer)
+
 
 @auctions.route('/my-auctions')
 def my_auctions():
     page = request.args.get('page', 1, type=int)
-    auctions = Auction.query.filter_by(user_id=current_user.id).order_by(Auction.id.desc()).paginate(page=page, per_page=5)
+    auctions = Auction.query.filter_by(user_id=current_user.id).order_by(Auction.id.desc()).paginate(page=page, per_page=12)
     return render_template('my_auctions.html', auctions=auctions)
+
+@auctions.route('/my-finished-auctions')
+def my_finished_auctions():
+    pass
+
+@auctions.route('/my-won-auctions')
+def my_won_auctions():
+    pass
 
 @auctions.route('/auction/<int:id>/edit', methods=['GET', 'POST'])
 def edit_auction(id):

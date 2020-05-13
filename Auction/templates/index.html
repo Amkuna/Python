@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <div class="container-fluid">
+        <div class="inner-header">
+            <div class="row">
+                <div class="col-lg-7 col-md-7">
+                    <div>
+                        <form method='POST' class="form-inline">
+                        {{ form.hidden_tag() }}
+                        {{ form.category(class='custom-select', style="flex-grow: 1") }}
+                        {{ form.submit(class='btn btn-primary') }}                         
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class='container-fluid'>
         <div class='row justify-content-start'>
             {% for auction in auctions.items %}

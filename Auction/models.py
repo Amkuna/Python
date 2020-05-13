@@ -60,3 +60,12 @@ class Offer(db.Model):
 
     def __repr__(self):
         return "Offer: " + str(self.price)
+
+class FinishedAuctions(db.Model):
+    __tablename__ = "finishedauctions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auctions.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    offer = db.Column(db.Integer)
+

@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from Auction.helpers.categories import choices
+import datetime
+from dateutil.relativedelta import relativedelta
 
 app = Flask(__name__)
 
@@ -30,11 +32,31 @@ app.add_url_rule('/add-auction/', view_func=auction_view, methods=['GET', 'POST'
 from Auction.auctions.views import auctions
 app.register_blueprint(auctions)
 
-from Auction.models import Offer, Auction
+from Auction.models import Offer, Auction, User
 
 @app.context_processor
 def categories():
     return dict(choices)
+
+#check time every second
+@socketio.on('auction_finished')
+def handle_auction_finish(auction_id):
+    auction = Auction.query.filter_by(id=auction_id).first()
+    end_day = auction.end_day
+    end_time = auction.end_time
+    
+    today = datetime.datetime.now()
+    rd = relativedelta(end_day, today)
+    print(rd)
+    if rd.seconds <= 0:
+        maxOffer = Offer.query.filter_by(auction_id=auction_id).order_by(Offer.price.desc()).first()
+        if maxOffer:
+            user = User.query.filter_by(id=maxOffer.user_id).first()
+            emit("auction_finish_result", {'success': 'yep', 'maxOffer': maxOffer.price, 'user': user.username}, broadcast=True)
+        else:
+            emit("auction_finish_result", {'maxOffer': None}, broadcast=True)
+    else:
+        emit("auction_finish_result", {'error': "Auction is not finished"}, broadcast=True)
 
 @socketio.on('message')
 def handle_message(json):
@@ -44,9 +66,6 @@ def handle_message(json):
 
 @socketio.on('bid')
 def handle_bid(bid, prevBid, auction_id, user_id):
-    #patikrinti ar tas aukcionas jau turi offeri
-    #jeigu neturi, patikrinti ar bid yra bent minimali kaina
-    #jeigu turi, patikrinti ar bid yra didesnis uz praeita bid
     auction = Auction.query.filter_by(id=auction_id).first()
     new_max_bid = False
     if prevBid == 'None':
@@ -74,7 +93,7 @@ def handle_bid(bid, prevBid, auction_id, user_id):
         db.session.commit()
         emit('bid_result', {"id": new_offer.id, "bid": new_offer.price}, broadcast=True)
     else:
-        emit('bid_result', {'error': 'Offer must be at least ' + str(prevBid)})
+        emit('bid_result', {'error': 'Offer must be at least ' + str(prevBid)}, broadcast=True)
         
 
 

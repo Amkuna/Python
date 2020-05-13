@@ -1,4 +1,5 @@
 choices = [
+    ('all_categories', 'All categories'),
     ('furniture', 'Furniture'),
     ('Computers', 'Computers'),
     ('accessories', 'Accessories'),

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class='container-fluid my-5'>
+    <div class='row'>
+        <div class='col-5'>
+            <img class="card-img-top" src="{{ url_for('static', filename='auction_images/' + auction.auction_image) }}" alt="Card image cap">
+        </div>
+        <div class='col-7'>
+            <h2 class='d-flex'>{{ auction.name }} <p>{{ auction.country }}</p></h2>
+            <small>{{ auction.category }}</small>
+            
+            <h3>Minimum price: {{ auction.min_price }} €</h3>
+            <h3>Current offer: <span id='currentOffer'></span> (€)</h3>
+            {% if current_user.id != auction.user_id %}
+            <div style="background-color: #eee">
+                <h4>Bid</h4>
+                <div class='form-group' style="width: 250px">
+                    <label for="bidInput">Amount</label>
+                    <input type="number" class="form-control" id="bidInput" value="">
+                    <p id="inputError" class='text-danger d-none'>Your bid must be more than <span id='errorMinOffer'></span></p>
+                    <button type='submit' id='bidBtn'>Submit</button>
+                </div>
+            </div>
+            {% endif %}
+            <h3>Auction ends on {{ auction.end_day }} at {{ auction.end_time }}</h3>
+            <h4>Time left : <span id='timer'>00:00</span></h4>
+            <p>Viewed {{ auction.views }} times</p>
+            <p>Author: {{ author.username }}</p>
+        </div>
+        {% if current_user.id == auction.user_id %}
+            <a href="#" class='btn btn-primary'>Edit</a>
+        {% endif %}
+    </div>
+    
+</div>
+
+{% endblock %}

@@ -9,11 +9,11 @@
         <div class='col-7'>
             <h2 class='d-flex'>{{ auction.name }} <p>{{ auction.country }}</p></h2>
             <small>{{ auction.category }}</small>
-            
+            <p>{{ auction.description }}</p>
             <h3>Minimum price: {{ auction.min_price }} €</h3>
             <h3>Current offer: <span id='currentOffer'></span> (€)</h3>
-            {% if current_user.id != auction.user_id %}
-            <div style="background-color: #eee">
+            {% if current_user.id and current_user.id != auction.user_id %}
+            <div id="submitAmountArea" style="background-color: #eee">
                 <h4>Bid</h4>
                 <div class='form-group' style="width: 250px">
                     <label for="bidInput">Amount</label>
@@ -46,7 +46,7 @@
         const elCurrentOffer = document.getElementById('currentOffer');
         elCurrentOffer.textContent = currentOffer;
 
-        {% if auction.user_id != current_user.id %}
+        {% if current_user.id and auction.user_id != current_user.id %}
             const bidInput = document.getElementById('bidInput');
             const bidBtn = document.getElementById('bidBtn');
             const elErrorMinOffer = document.getElementById('errorMinOffer');
@@ -61,10 +61,10 @@
         {% endif %}
 
         //When receives 'bid' event
-        socket.on('bid_result', (bid) => {
+        socket.on('bid_result', bid => {
             console.log("Naujas bid:");
             console.log(bid);
-            {% if auction.user_id != current_user.id %}
+            {% if current_user.id and auction.user_id != current_user.id %}
             if(bid.error) {
                 document.getElementById('inputError').classList.replace('d-none', 'd-block');
             }
@@ -72,10 +72,23 @@
             if (bid.bid) {
                 currentOffer = bid.bid;
                 elCurrentOffer.textContent = currentOffer;
-                {% if auction.user_id != current_user.id %}
+                {% if current_user.id and auction.user_id != current_user.id %}
                 document.getElementById('inputError').classList.replace('d-block', 'd-none');
                 elErrorMinOffer.textContent = currentOffer;
                 {% endif %}
+            }
+        });
+
+        socket.on("auction_finish_result", result => {
+            if(!result.error) {
+                if(result.maxOffer) {
+                    document.getElementById('timer').textContent = "Auction is finished. Winner is: " + result.user;
+
+                } else {
+                    document.getElementById('timer').textContent = "Auction is finished. No one bidded.";
+                }
+            } else {
+                document.getElementById('timer').textContent = "Error occurred. Try again later";
             }
         });
 
@@ -84,20 +97,25 @@
 
         let end_day = {{ auction.end_day|tojson }};
         let end_time = "{{ auction.end_time }}";
+        let time = end_time.split(':');
+        const miliseconds = Number(time[0]) * 60 * 60 * 1000 + Number(time[1]) * 60 * 1000 + Number(time[2]) * 1000 - 3 * 60 * 60 * 1000;
 
         let countdown = setInterval(() => {
             let now = new Date();
-            // console.log("Now: ", now);
-
-            let distance = new Date(end_day) - now;
-            distance = distance / 1000;
-            // console.log("Distance", distance / 1000 / 60 / 60 / 24 / 365);
-
-            let hours = distance / 1000 / 60 / 60;
-            let minutes = Math.floor(distance / 60);
-            let seconds = distance % 60;
-            document.getElementById('timer').textContent = minutes + ':' + Math.floor(seconds);
-            
+            console.log("COUNTDOWN");
+            let distance = moment(new Date(end_day)).add(miliseconds, 'ms').toDate() - now;
+            if(distance <= 0) {
+                clearInterval(countdown);
+                socket.emit("auction_finished", {{auction.id}})
+                {% if current_user.id != auction.user_id %}
+                document.getElementById("submitAmountArea").classList.add("d-none");
+                {% endif %}
+            } else {
+                let hours = distance / 3600000;
+                let minutes = distance / 1000 / 60 % 60;
+                let seconds = distance / 1000 % 60;
+                document.getElementById('timer').textContent = Math.floor(hours) + ":" + Math.floor(minutes) + ':' + Math.floor(seconds) + " (h:m:s)";
+            }
         }, 1000)
     </script>
 {% endblock %}
